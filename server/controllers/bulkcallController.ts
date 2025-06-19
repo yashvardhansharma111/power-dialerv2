@@ -65,6 +65,7 @@ export const dialNextNumber = async () => {
     const call = await client.calls.create({
       from: process.env.DEFAULT_TWILIO_NUMBER!,
       to: number,
+      record: true,
       url: `${process.env.BASE_URL}/api/twilio/connect?room=${encodeURIComponent(conference)}`,
       statusCallback: `${process.env.BASE_URL}/api/twilio/events`,
       statusCallbackEvent: ["initiated", "ringing", "answered", "completed", "failed", "busy", "no-answer"],

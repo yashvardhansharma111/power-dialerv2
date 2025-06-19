@@ -21,6 +21,7 @@ export const makeManualCall = async (req: Request, res: Response): Promise<void>
     const call = await client.calls.create({
       from,
       to,
+      record: true,
       url: `${process.env.BASE_URL}/api/twilio/connect`,
       statusCallback: `${process.env.BASE_URL}/api/twilio/events`,
       statusCallbackEvent: ["initiated", "ringing", "answered", "completed"],
@@ -58,6 +59,7 @@ export const uploadAndStartCalls = async (req: MulterRequest, res: Response): Pr
         const call = await client.calls.create({
           url: `${process.env.BASE_URL}/api/twilio/bridge`,
           to: number,
+          record: true,
           from: process.env.DEFAULT_TWILIO_NUMBER!,
           statusCallback: `${process.env.BASE_URL}/api/twilio/events`,
           statusCallbackEvent: ["initiated", "ringing", "answered", "completed"],

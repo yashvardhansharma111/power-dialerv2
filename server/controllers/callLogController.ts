@@ -49,3 +49,20 @@ export const getCallLogsByNumber = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Failed to fetch logs for the number" });
   }
 };
+
+// Get recording URL for a call SID
+export const getRecordingBySid = async (req: Request, res: Response) => {
+  const { sid } = req.params;
+  try {
+    const recordings = await client.recordings.list({ callSid: sid, limit: 1 });
+    if (!recordings.length) {
+      res.status(404).json({ message: "No recording found for this call." });
+      return;
+    }
+    const recording = recordings[0];
+    const url = `https://api.twilio.com${recording.uri.replace('.json', '.mp3')}`;
+    res.json({ url });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to fetch recording.", error: err instanceof Error ? err.message : String(err) });
+  }
+};

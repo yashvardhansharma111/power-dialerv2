@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Search, Clock, PhoneCall, FileText } from "lucide-react"
 import { toast } from "@/hooks/use-toast"
 import { API } from "@/utils/const"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 
 interface CallLog {
   sid: string
@@ -26,21 +27,30 @@ export function LogsView() {
   const [filteredLogs, setFilteredLogs] = useState<CallLog[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [isLoading, setIsLoading] = useState(true)
+  const [statusFilter, setStatusFilter] = useState<string>("all")
+  const [directionFilter, setDirectionFilter] = useState<string>("all")
+  const [recordingUrl, setRecordingUrl] = useState<string | null>(null)
+  const [showRecording, setShowRecording] = useState(false)
 
   useEffect(() => {
     fetchCallLogs()
   }, [])
 
   useEffect(() => {
+    let filtered = logs
+    if (statusFilter !== "all") {
+      filtered = filtered.filter((log) => log.status === statusFilter)
+    }
+    if (directionFilter !== "all") {
+      filtered = filtered.filter((log) => (log.direction || "").toLowerCase() === directionFilter)
+    }
     if (searchTerm) {
-      const filtered = logs.filter(
+      filtered = filtered.filter(
         (log) => log.from.includes(searchTerm) || log.to.includes(searchTerm) || log.sid.includes(searchTerm),
       )
-      setFilteredLogs(filtered)
-    } else {
-      setFilteredLogs(logs)
     }
-  }, [searchTerm, logs])
+    setFilteredLogs(filtered)
+  }, [searchTerm, logs, statusFilter, directionFilter])
 
   const fetchCallLogs = async () => {
     try {
@@ -107,8 +117,45 @@ export function LogsView() {
     return mins > 0 ? `${mins}m ${secs}s` : `${secs}s`
   }
 
+  const statusOptions = [
+    { value: "all", label: "All" },
+    { value: "completed", label: "Completed" },
+    { value: "busy", label: "Busy" },
+    { value: "failed", label: "Failed" },
+    { value: "in-progress", label: "In Progress" },
+    { value: "ringing", label: "Ringing" },
+    { value: "no-answer", label: "No Answer" },
+    { value: "queued", label: "Queued" },
+    { value: "canceled", label: "Canceled" },
+  ]
+  const directionOptions = [
+    { value: "all", label: "All" },
+    { value: "inbound", label: "Incoming" },
+    { value: "outbound-api", label: "Outgoing" },
+    { value: "outbound-dial", label: "Outgoing (Dial)" },
+  ]
+
+  const handleListenRecording = async (log: CallLog) => {
+    if (!log.recordingUrl) return
+    try {
+      // Twilio returns a subresource URI, need to fetch the actual recording list
+      const response = await fetch(`http://localhost:8000/api/call-logs/recording/${log.sid}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("jwt")}` },
+      })
+      const data = await response.json()
+      if (data && data.url) {
+        setRecordingUrl(data.url)
+        setShowRecording(true)
+      } else {
+        toast({ title: "No recording found", description: "No audio available for this call." })
+      }
+    } catch {
+      toast({ title: "Recording Error", description: "Could not fetch recording.", variant: "destructive" })
+    }
+  }
+
   return (
-<div className="space-y-4 p-4 pb-28 max-w-4xl mx-auto">
+    <div className="space-y-4 p-4 pb-28 max-w-4xl mx-auto">
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -116,14 +163,29 @@ export function LogsView() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="relative mb-4">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search by number or SID..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+          {/* Filters */}
+          <div className="flex flex-wrap gap-3 mb-4 items-center">
+            <div>
+              <label className="text-xs font-medium mr-2">Status:</label>
+              <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="border rounded px-2 py-1">
+                {statusOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="text-xs font-medium mr-2">Direction:</label>
+              <select value={directionFilter} onChange={e => setDirectionFilter(e.target.value)} className="border rounded px-2 py-1">
+                {directionOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+              </select>
+            </div>
+            <div className="relative flex-1 min-w-[200px]">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by number or SID..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
           </div>
 
           {isLoading ? (
@@ -153,6 +215,11 @@ export function LogsView() {
                       <Button size="sm" variant="outline" onClick={() => handleRedial(log.to)}>
                         <PhoneCall className="h-3 w-3" />
                       </Button>
+                      {log.recordingUrl && (
+                        <Button size="sm" variant="outline" onClick={() => handleListenRecording(log)}>
+                          Listen
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </Card>
@@ -161,6 +228,19 @@ export function LogsView() {
           )}
         </CardContent>
       </Card>
+      {/* Recording Dialog */}
+      <Dialog open={showRecording} onOpenChange={setShowRecording}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Call Recording</DialogTitle>
+          </DialogHeader>
+          {recordingUrl ? (
+            <audio controls src={recordingUrl} className="w-full mt-4" />
+          ) : (
+            <div className="text-center text-muted-foreground">No recording available.</div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

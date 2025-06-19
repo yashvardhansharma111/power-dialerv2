@@ -1,0 +1,37 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "description": "backend for 9x fold dialrt",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm run dev",
+    "dev": "ts-node-dev index.ts"
+  },
+  "keywords": [
+    "9xfold",
+    "9x",
+    "fold",
+    "dialer"
+  ],
+  "author": "yashvardhan",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^2.0.1",
+    "socket.io": "^4.8.1",
+    "twilio": "^5.7.0",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/jsonwebtoken": "^9.0.9",
+    "@types/multer": "^1.4.13",
+    "@types/node": "^22.15.30",
+    "@types/socket.io": "^3.0.1",
+    "ts-node-dev": "^2.0.0"
+  }
+}

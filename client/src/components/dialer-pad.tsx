@@ -27,7 +27,7 @@ const API_BASE = API.LOGIN.replace(/\/auth\/login$/, "");
 const SOCKET_BASE = API_BASE.replace(/\/api$/, "");
 const socket = io(SOCKET_BASE)
 
-let globalDevice: Device | null = null
+const globalDevice: Device | null = null
 
 export function DialerPad() {
   const [number, setNumber] = useState("")

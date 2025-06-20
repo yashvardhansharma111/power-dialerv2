@@ -1,7 +1,7 @@
 {
   "name": "server",
   "version": "1.0.0",
-  "description": "backend for 9x fold dialrt",
+  "description": "backend for 9x fold dialer",
   "main": "index.js",
   "scripts": {
     "dev": "ts-node-dev index.ts",
@@ -9,12 +9,7 @@
     "start": "node dist/index.js",
     "postinstall": "patch-package"
   },
-  "keywords": [
-    "9xfold",
-    "9x",
-    "fold",
-    "dialer"
-  ],
+  "keywords": ["9xfold", "9x", "fold", "dialer"],
   "author": "yashvardhan",
   "license": "ISC",
   "dependencies": {
@@ -27,18 +22,19 @@
     "multer": "^2.0.1",
     "socket.io": "^4.8.1",
     "twilio": "^4.9.0",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+
+    "@types/express": "^5.0.3",
+    "@types/node": "^22.15.32",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/multer": "^1.4.13",
+    "@types/cors": "^2.8.19",
+    "@types/xlsx": "^0.0.35"
   },
   "devDependencies": {
     "@types/axios": "^0.9.36",
-    "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.3",
-    "@types/jsonwebtoken": "^9.0.10",
     "@types/luxon": "^3.6.2",
-    "@types/multer": "^1.4.13",
-    "@types/node": "^22.15.32",
     "@types/socket.io": "^3.0.1",
-    "@types/xlsx": "^0.0.35",
     "patch-package": "^8.0.0",
     "postinstall-postinstall": "^2.1.0",
     "ts-node-dev": "^2.0.0",

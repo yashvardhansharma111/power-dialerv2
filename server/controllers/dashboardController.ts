@@ -6,9 +6,11 @@ import { DateTime } from "luxon";
 export const getDashboardStats = async (req: Request, res: Response) => {
   try {
     const { fromDate, toDate } = req.query;
+    console.log("[Dashboard] Query Params:", { fromDate, toDate });
     // Parse dates or default to today
     const from = fromDate ? DateTime.fromISO(String(fromDate)) : DateTime.now().startOf('day');
     const to = toDate ? DateTime.fromISO(String(toDate)) : DateTime.now().endOf('day');
+    console.log(`[Dashboard] Date Range: from=${from.toISO()} to=${to.toISO()}`);
 
     // Twilio API expects RFC2822 or ISO8601
     const calls = await client.calls.list({
@@ -16,8 +18,22 @@ export const getDashboardStats = async (req: Request, res: Response) => {
       startTimeBefore: to.toJSDate(),
       limit: 1000,
     });
-    console.log("[Dashboard] Calls fetched:", calls.length, calls.map(c => ({ from: c.from, to: c.to, status: c.status, startTime: c.startTime, duration: c.duration })));
-    // Group by number (from)
+    console.log(`[Dashboard] Calls fetched: ${calls.length}`);
+    calls.forEach((c, i) => {
+      console.log(`[Dashboard] Call #${i + 1}:`, {
+        sid: c.sid,
+        from: c.from,
+        to: c.to,
+        status: c.status,
+        startTime: c.startTime,
+        duration: c.duration,
+      });
+    });
+    // Fetch all Twilio numbers for this account
+    const twilioNumbers = (await client.incomingPhoneNumbers.list()).map(n => n.phoneNumber);
+    console.log('[Dashboard] Twilio numbers:', twilioNumbers);
+
+    // Group stats only for Twilio numbers (as 'from')
     const stats: Record<string, {
       total: number;
       completed: number;
@@ -26,12 +42,16 @@ export const getDashboardStats = async (req: Request, res: Response) => {
       no_answer: number;
       in_progress: number;
       totalDuration: number;
+      uniqueNumbersCalled: string[];
+      callDetails: Array<{ to: string, status: string, duration: number, startTime: string, sid: string }>;
     }> = {};
+    // Use a temporary map to hold sets for unique numbers
+    const uniqueNumbersMap: Record<string, Set<string>> = {};
 
     for (const call of calls) {
-      const num = call.from || "Unknown";
-      if (!stats[num]) {
-        stats[num] = {
+      if (!call.from || !twilioNumbers.includes(call.from)) continue;
+      if (!stats[call.from]) {
+        stats[call.from] = {
           total: 0,
           completed: 0,
           busy: 0,
@@ -39,24 +59,70 @@ export const getDashboardStats = async (req: Request, res: Response) => {
           no_answer: 0,
           in_progress: 0,
           totalDuration: 0,
+          uniqueNumbersCalled: [],
+          callDetails: [],
         };
+        uniqueNumbersMap[call.from] = new Set();
+        console.log(`[Dashboard] New stats entry for Twilio number: ${call.from}`);
       }
-      stats[num].total++;
-      if (call.status === "completed") stats[num].completed++;
-      if (call.status === "busy") stats[num].busy++;
-      if (call.status === "failed") stats[num].failed++;
-      if (call.status === "no-answer") stats[num].no_answer++;
-      if (call.status === "in-progress") stats[num].in_progress++;
-      stats[num].totalDuration += Number(call.duration || 0);
+      stats[call.from].total++;
+      if (call.status === "completed") stats[call.from].completed++;
+      if (call.status === "busy") stats[call.from].busy++;
+      if (call.status === "failed") stats[call.from].failed++;
+      if (call.status === "no-answer") stats[call.from].no_answer++;
+      if (call.status === "in-progress") stats[call.from].in_progress++;
+      stats[call.from].totalDuration += Number(call.duration || 0);
+      if (call.to) uniqueNumbersMap[call.from].add(call.to);
+      stats[call.from].callDetails.push({
+        to: call.to,
+        status: call.status,
+        duration: Number(call.duration || 0),
+        startTime: call.startTime ? (typeof call.startTime === 'string' ? call.startTime : call.startTime.toISOString()) : "",
+        sid: call.sid,
+      });
+      console.log(`[Dashboard] Updated stats for ${call.from}:`, stats[call.from]);
     }
 
-    res.json({
-      from: from.toISODate(),
-      to: to.toISODate(),
-      stats,
+    // Assign uniqueNumbersCalled arrays with fallback logic
+    Object.keys(stats).forEach(num => {
+      stats[num].uniqueNumbersCalled = Array.from(uniqueNumbersMap[num] || []);
+      // If uniqueNumbersCalled is empty but callDetails has data, try to fill it from callDetails
+      if (stats[num].uniqueNumbersCalled.length === 0 && stats[num].callDetails.length > 0) {
+        stats[num].uniqueNumbersCalled = Array.from(new Set(stats[num].callDetails.map(cd => cd.to).filter(Boolean)));
+      }
+      console.log(`[Dashboard] Final uniqueNumbersCalled for ${num}:`, stats[num].uniqueNumbersCalled);
+    });
+
+    // Always return all Twilio numbers, even if no stats
+    const allStats: Record<string, any> = { ...stats };
+    twilioNumbers.forEach(num => {
+      if (!allStats[num]) {
+        allStats[num] = {
+          total: 0,
+          completed: 0,
+          busy: 0,
+          failed: 0,
+          no_answer: 0,
+          in_progress: 0,
+          totalDuration: 0,
+          uniqueNumbersCalled: [],
+          callDetails: [],
+        };
+      }
+    });
+
+    console.log('[Dashboard] Final stats object:', JSON.stringify(allStats, null, 2));
+
+    res.status(200).json({
+      success: true,
+      data: allStats,
+      twilioNumbers,
     });
   } catch (error) {
-    console.error("Error fetching dashboard stats:", error);
-    res.status(500).json({ message: "Failed to fetch dashboard stats" });
+    console.error("[Dashboard] Error fetching stats:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
   }
 };

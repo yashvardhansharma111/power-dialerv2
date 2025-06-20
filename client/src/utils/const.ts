@@ -1,4 +1,4 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000/api"
+const API_BASE ="https://power-dialerv2-wior.vercel.app/api"
 
 export const API = {
   LOGIN: `${API_BASE}/auth/login`,

@@ -7,7 +7,7 @@ export function useSocket() {
   const [socket, setSocket] = useState<Socket | null>(null)
 
   useEffect(() => {
-    const socketInstance = io(process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:8000", {
+    const socketInstance = io(process.env.NEXT_PUBLIC_SOCKET_URL || "https://power-dialerv2-wior.vercel.app", {
       auth: {
         token: localStorage.getItem("jwt"),
       },

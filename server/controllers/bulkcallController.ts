@@ -15,6 +15,7 @@ interface BulkCallState {
   currentIndex: number;
   isPaused: boolean;
   isStopped: boolean;
+  from?: string; // <-- Make optional
   results: {
     number: string;
     status: CallStatus;
@@ -30,6 +31,7 @@ const bulkCallState: BulkCallState = {
   currentIndex: 0,
   isPaused: false,
   isStopped: false,
+  from: undefined, // <-- Add from here
   results: [],
 };
 
@@ -50,10 +52,24 @@ export const dialNextNumber = async () => {
   const conference = `BulkConf-${number}-${Date.now()}`;
   bulkCallState.results[bulkCallState.currentIndex] = { number, status: "in-progress", conference };
 
+  const callerId = bulkCallState.from || process.env.DEFAULT_TWILIO_NUMBER;
+  if (!callerId) {
+    console.error("[BulkCall] No callerId provided for call.");
+    bulkCallState.results[bulkCallState.currentIndex] = {
+      number,
+      status: "failed",
+      error: "No callerId provided",
+      conference,
+    };
+    bulkCallState.currentIndex++;
+    setTimeout(dialNextNumber, 1000);
+    return;
+  }
+
   console.log(`[BulkCall] [EventDriven] Attempting to call: ${number}`);
   console.log(`[BulkCall] Conference: ${conference}`);
   console.log(`[BulkCall] Twilio payload:`, {
-    from: process.env.DEFAULT_TWILIO_NUMBER,
+    from: callerId,
     to: number,
     url: `${process.env.BASE_URL}/api/twilio/connect?room=${encodeURIComponent(conference)}`,
     statusCallback: `${process.env.BASE_URL}/api/twilio/events`,
@@ -63,7 +79,7 @@ export const dialNextNumber = async () => {
 
   try {
     const call = await client.calls.create({
-      from: process.env.DEFAULT_TWILIO_NUMBER!,
+      from: callerId,
       to: number,
       record: true,
       url: `${process.env.BASE_URL}/api/twilio/connect?room=${encodeURIComponent(conference)}`,
@@ -135,7 +151,8 @@ export const uploadNumbersFromExcel = async (req: MulterRequest, res: Response):
 };
 
 // 🆕 Start event-driven bulk call
-export const startBulkCalls = async (_req: Request, res: Response): Promise<void> => {
+export const startBulkCalls = async (req: Request, res: Response): Promise<void> => {
+  const { from } = req.body;
   if (!bulkCallState.numbers.length) {
     res.status(400).json({ message: "No numbers uploaded" });
     return;
@@ -146,6 +163,7 @@ export const startBulkCalls = async (_req: Request, res: Response): Promise<void
   }
   bulkCallState.isPaused = false;
   bulkCallState.isStopped = false;
+  bulkCallState.from = from || process.env.DEFAULT_TWILIO_NUMBER;
   console.log("[BulkCall] startBulkCalls API called (event-driven)");
   dialNextNumber();
   res.json({ message: "Bulk calling started" });

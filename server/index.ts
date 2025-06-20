@@ -13,6 +13,7 @@ import twilioRoutes from "./routes/twilioRoutes"
 import numberRoutes from "./routes/numberRoutes"
 import callLogRoutes from "./routes/callLogRoutes"
 import bulkRoutes from "./routes/bulkCallRoutes"
+import dashboardRoutes from "./routes/dashboardRoutes"
 
 const app = express()
 
@@ -47,6 +48,7 @@ app.use("/api/twilio", twilioRoutes)
 app.use("/api/numbers", numberRoutes)
 app.use("/api/call-logs", callLogRoutes)
 app.use("/api/bulk-calls", bulkRoutes)
+app.use("/api/dashboard", dashboardRoutes)
 
 app.get("/", (req, res) => {
   res.status(200).json({ status: "OK", message: "Server is healthy ✅" })

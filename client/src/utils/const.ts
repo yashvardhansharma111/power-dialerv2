@@ -9,6 +9,8 @@ export const API = {
   CALL_LOGS: `${API_BASE}/call-logs/all`,
   GET_TWILIO_TOKEN: `${API_BASE}/twilio/token`,
   CALL_LOGS_BY_NUMBER: (num: string) => `${API_BASE}/call-logs/${num}`,
+  DASHBOARD_STATS: `${API_BASE}/dashboard/stats`,
+  CALL_RECORDING_AUDIO: (sid: string) => `${API_BASE}/call-logs/recording/audio/${sid}`,
 
   // 🆕 Bulk Call Endpoints
   BULK_CALLS: {

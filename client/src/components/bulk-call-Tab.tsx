@@ -2,6 +2,13 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Upload, Play, Pause, Square, RotateCcw, Phone, CheckCircle, XCircle, Clock, FileSpreadsheet, AlertCircle, X } from 'lucide-react';
 import { Device } from '@twilio/voice-sdk'; // Ensure you have the Twilio library installed
 import { API } from '../utils/const'; // Adjust the import based on your file structure
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface CallResult {
   number: string;
@@ -34,6 +41,8 @@ const BulkCallTab = () => {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [uploadSuccess, setUploadSuccess] = useState<string | null>(null);
   const [isPolling, setIsPolling] = useState(false);
+  const [availableNumbers, setAvailableNumbers] = useState<any[]>([]);
+  const [selectedNumber, setSelectedNumber] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const statusIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -191,10 +200,34 @@ const isAllCallsCompleted = () => {
     }
   };
 
+  // Fetch available Twilio numbers on mount
+  useEffect(() => {
+    const fetchNumbers = async () => {
+      try {
+        const res = await fetch(API.GET_NUMBERS, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('jwt')}` },
+        });
+        const data = await res.json();
+        setAvailableNumbers(Array.isArray(data) ? data : data.numbers || []);
+        if (data && data.length > 0) setSelectedNumber(data[0].phoneNumber);
+      } catch {
+        addToast('error', 'Failed to fetch Twilio numbers');
+      }
+    };
+    fetchNumbers();
+  }, []);
+
   const startCalls = async () => {
     setIsStarting(true);
     try {
-      const response = await fetch(API.BULK_CALLS.START, { method: 'POST' });
+      const response = await fetch(API.BULK_CALLS.START, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('jwt')}`,
+        },
+        body: JSON.stringify({ from: selectedNumber }),
+      });
       if (response.ok) {
         addToast('success', 'Bulk calling started successfully');
         await fetchStatus();
@@ -424,6 +457,26 @@ const isAllCallsCompleted = () => {
           <FileSpreadsheet className="w-6 h-6 text-blue-600" />
           Upload Excel File
         </h2>
+        {/* Twilio Number Selector */}
+        <div className="mb-6">
+          <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-200">Select Twilio Caller ID</label>
+          {availableNumbers.length > 0 ? (
+            <Select value={selectedNumber} onValueChange={setSelectedNumber}>
+              <SelectTrigger className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-blue-500">
+                <SelectValue placeholder="Select caller ID" className="text-gray-900 dark:text-gray-100" />
+              </SelectTrigger>
+              <SelectContent className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-700">
+                {availableNumbers.map((num: any) => (
+                  <SelectItem key={num.phoneNumber} value={num.phoneNumber} className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-blue-100 dark:hover:bg-blue-900">
+                    {num.friendlyName || num.phoneNumber}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : (
+            <p className="text-sm text-muted-foreground">No Twilio numbers available.</p>
+          )}
+        </div>
         
         <div
           className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-all duration-300 cursor-pointer ${

@@ -31,6 +31,7 @@ export function LogsView() {
   const [directionFilter, setDirectionFilter] = useState<string>("all")
   const [recordingUrl, setRecordingUrl] = useState<string | null>(null)
   const [showRecording, setShowRecording] = useState(false)
+  const [audioBlobUrl, setAudioBlobUrl] = useState<string | null>(null)
 
   useEffect(() => {
     fetchCallLogs()
@@ -138,13 +139,20 @@ export function LogsView() {
   const handleListenRecording = async (log: CallLog) => {
     if (!log.recordingUrl) return
     try {
-      // Twilio returns a subresource URI, need to fetch the actual recording list
+      // Get the recording URL (as before)
       const response = await fetch(`http://localhost:8000/api/call-logs/recording/${log.sid}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("jwt")}` },
       })
       const data = await response.json()
       if (data && data.url) {
-        setRecordingUrl(data.url)
+        // Fetch the audio as a blob with auth header
+        const audioRes = await fetch(API.CALL_RECORDING_AUDIO(log.sid), {
+          headers: { Authorization: `Bearer ${localStorage.getItem("jwt")}` },
+        })
+        if (!audioRes.ok) throw new Error("Failed to fetch audio")
+        const blob = await audioRes.blob()
+        const url = URL.createObjectURL(blob)
+        setAudioBlobUrl(url)
         setShowRecording(true)
       } else {
         toast({ title: "No recording found", description: "No audio available for this call." })
@@ -153,6 +161,13 @@ export function LogsView() {
       toast({ title: "Recording Error", description: "Could not fetch recording.", variant: "destructive" })
     }
   }
+
+  useEffect(() => {
+    if (!showRecording && audioBlobUrl) {
+      URL.revokeObjectURL(audioBlobUrl);
+      setAudioBlobUrl(null);
+    }
+  }, [showRecording]);
 
   return (
     <div className="space-y-4 p-4 pb-28 max-w-4xl mx-auto">
@@ -167,13 +182,13 @@ export function LogsView() {
           <div className="flex flex-wrap gap-3 mb-4 items-center">
             <div>
               <label className="text-xs font-medium mr-2">Status:</label>
-              <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="border rounded px-2 py-1">
+              <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="border rounded px-2 py-1 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-blue-500">
                 {statusOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
               </select>
             </div>
             <div>
               <label className="text-xs font-medium mr-2">Direction:</label>
-              <select value={directionFilter} onChange={e => setDirectionFilter(e.target.value)} className="border rounded px-2 py-1">
+              <select value={directionFilter} onChange={e => setDirectionFilter(e.target.value)} className="border rounded px-2 py-1 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-blue-500">
                 {directionOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
               </select>
             </div>
@@ -234,8 +249,8 @@ export function LogsView() {
           <DialogHeader>
             <DialogTitle>Call Recording</DialogTitle>
           </DialogHeader>
-          {recordingUrl ? (
-            <audio controls src={recordingUrl} className="w-full mt-4" />
+          {audioBlobUrl ? (
+            <audio controls src={audioBlobUrl} className="w-full mt-4" />
           ) : (
             <div className="text-center text-muted-foreground">No recording available.</div>
           )}

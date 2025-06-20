@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { Navbar } from "@/components/navbar"
 import { DialerPad } from "@/components/dialer-pad"
 import { LogsView } from "@/components/logs-view"
-import { SettingsView } from "@/components/settings-view"
+import DashboardView from "@/components/settings-view"
 import { IncomingCallToast } from "@/components/incoming-call-toast"
 import { useSocket } from "@/hooks/use-socket"
 import { toast } from "@/hooks/use-toast"
@@ -68,7 +68,7 @@ export default function DialerPage() {
       case "logs":
         return <LogsView />
       case "settings":
-        return <SettingsView />
+        return <DashboardView />
         case "bulk-call":
       return <BulkCallTab />
       default:

@@ -34,6 +34,7 @@ const server = http.createServer(app)
 const io = new Server(server, {
   cors: {
     origin: ["http://localhost:3000",
+      "https://power-dialerv2-xvjj.vercel.app",
       "https://power-dialerv2-xvjj.vercel.app"
     ], // same as frontend
     methods: ["GET", "POST"]

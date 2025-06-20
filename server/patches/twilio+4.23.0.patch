@@ -1,0 +1,12 @@
+diff --git a/node_modules/twilio/lib/base/RequestClient.d.ts b/node_modules/twilio/lib/base/RequestClient.d.ts
+index be42cb3..c4f9513 100644
+--- a/node_modules/twilio/lib/base/RequestClient.d.ts
++++ b/node_modules/twilio/lib/base/RequestClient.d.ts
+@@ -1,6 +1,6 @@
+ /// <reference types="node" />
+ import { HttpMethod } from "../interfaces";
+-import { AxiosInstance } from "axios";
++import axios from "axios"; // or remove it if unused
+ import Response from "../http/response";
+ import Request, { Headers } from "../http/request";
+ declare class RequestClient {

@@ -87,7 +87,7 @@ export const streamRecordingAudio = async (req: Request, res: Response) => {
       auth: twilioAuth,
     });
     res.setHeader("Content-Type", "audio/mpeg");
-    response.data.pipe(res);
+    (response.data as NodeJS.ReadableStream).pipe(res);
   } catch (err) {
     res.status(500).json({ message: "Failed to stream recording.", error: err instanceof Error ? err.message : String(err) });
   }

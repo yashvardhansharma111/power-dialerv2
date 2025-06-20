@@ -4,8 +4,9 @@
   "description": "backend for 9x fold dialrt",
   "main": "index.js",
   "scripts": {
-    "test": "npm run dev",
-    "dev": "ts-node-dev index.ts"
+    "dev": "ts-node-dev index.ts",
+  "build": "tsc",
+  "start": "node dist/index.js"
   },
   "keywords": [
     "9xfold",

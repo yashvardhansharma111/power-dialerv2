@@ -1,4 +1,4 @@
-const API_BASE ="https://power-dialerv2-wior.vercel.app/api"
+const API_BASE = "http://localhost:8000/api";
 
 export const API = {
   LOGIN: `${API_BASE}/auth/login`,
@@ -11,6 +11,7 @@ export const API = {
   CALL_LOGS_BY_NUMBER: (num: string) => `${API_BASE}/call-logs/${num}`,
   DASHBOARD_STATS: `${API_BASE}/dashboard/stats`,
   CALL_RECORDING_AUDIO: (sid: string) => `${API_BASE}/call-logs/recording/audio/${sid}`,
+  CALL_RECORDING_META: (sid: string) => `${API_BASE}/call-logs/recording/${sid}`,
 
   // 🆕 Bulk Call Endpoints
   BULK_CALLS: {
@@ -21,5 +22,14 @@ export const API = {
     STOP: `${API_BASE}/bulk-calls/stop`,
     STATUS: `${API_BASE}/bulk-calls/status`,
   },
-}
 
+  // 🆕 Messaging Endpoints
+  MESSAGES: {
+    SEND: `${API_BASE}/messages/send`,                     // POST
+    ALL: `${API_BASE}/messages/all`,                       // GET
+    FILTER: (status: string) => `${API_BASE}/messages/filter?status=${status}`, // GET
+    CONVERSATION: (number: string, from: string) =>
+      `${API_BASE}/messages/conversation/${number}?from=${from}`,              // GET
+    STATUS_CALLBACK: `${API_BASE}/messages/status-callback`, // POST (used by Twilio internally)
+  },
+};

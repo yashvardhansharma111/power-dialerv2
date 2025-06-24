@@ -10,6 +10,7 @@ import { IncomingCallToast } from "@/components/incoming-call-toast"
 import { useSocket } from "@/hooks/use-socket"
 import { toast } from "@/hooks/use-toast"
 import BulkCallTab from "@/components/bulk-call-Tab"
+import Message  from "@/components/message-Tab"
 
 export default function DialerPage() {
   const [activeTab, setActiveTab] = useState("phone")
@@ -71,6 +72,8 @@ export default function DialerPage() {
         return <DashboardView />
         case "bulk-call":
       return <BulkCallTab />
+        case "message":
+          return <Message/>
       default:
         return <DialerPad />
     }

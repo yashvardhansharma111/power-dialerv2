@@ -140,7 +140,7 @@ export function LogsView() {
     if (!log.recordingUrl) return
     try {
       // Get the recording URL (as before)
-      const response = await fetch(`https://power-dialerv2-wior.vercel.app/api/call-logs/recording/${log.sid}`, {
+const response = await fetch(API.CALL_RECORDING_META(log.sid), {
         headers: { Authorization: `Bearer ${localStorage.getItem("jwt")}` },
       })
       const data = await response.json()

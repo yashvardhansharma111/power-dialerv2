@@ -290,10 +290,10 @@ const isAllCallsCompleted = () => {
   };
 
   const getStatusColor = () => {
-    if (!callStatus || callStatus.total === 0) return 'bg-gray-100 text-gray-600';
-    if (callStatus.isStopped) return 'bg-red-100 text-red-600';
-    if (callStatus.isPaused) return 'bg-yellow-100 text-yellow-600';
-    return 'bg-green-100 text-green-600';
+    if (!callStatus || callStatus.total === 0) return 'bg-gray-700 text-gray-200';
+    if (callStatus.isStopped) return 'bg-red-900/30 text-red-300';
+    if (callStatus.isPaused) return 'bg-yellow-900/30 text-yellow-300';
+    return 'bg-green-900/30 text-green-300';
   };
 
   const getStatusText = () => {
@@ -419,7 +419,7 @@ const isAllCallsCompleted = () => {
   }, [currentActiveCall?.conference, currentActiveCall?.status, currentActiveCall?.sid, callStatus?.currentIndex]);
 
   return (
-    <div className="p-6 max-w-6xl mx-auto space-y-6 animate-in fade-in duration-500">
+    <div className="p-6 max-w-6xl mx-auto space-y-6 animate-in fade-in duration-500 bg-gray-900 min-h-screen">
       {/* Toast Notifications */}
       <div className="fixed top-4 right-4 z-50 space-y-2">
         {toasts.map((toast) => (
@@ -452,22 +452,22 @@ const isAllCallsCompleted = () => {
         ))}
       </div>
       {/* Upload Section */}
-      <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
-        <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+      <div className="bg-gray-800 rounded-xl shadow-lg border border-gray-700 p-6">
+        <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
           <FileSpreadsheet className="w-6 h-6 text-blue-600" />
           Upload Excel File
         </h2>
         {/* Twilio Number Selector */}
         <div className="mb-6">
-          <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-200">Select Twilio Caller ID</label>
+          <label className="block mb-2 text-sm font-medium text-gray-100 dark:text-gray-200">Select Twilio Caller ID</label>
           {availableNumbers.length > 0 ? (
             <Select value={selectedNumber} onValueChange={setSelectedNumber}>
-              <SelectTrigger className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-blue-500">
-                <SelectValue placeholder="Select caller ID" className="text-gray-900 dark:text-gray-100" />
+              <SelectTrigger className="bg-gray-800 dark:bg-gray-800 text-white dark:text-gray-100 border border-gray-600 dark:border-gray-700 focus:ring-2 focus:ring-blue-500">
+                <SelectValue placeholder="Select caller ID" className="text-white dark:text-gray-100" />
               </SelectTrigger>
-              <SelectContent className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-700">
+              <SelectContent className="bg-gray-800 dark:bg-gray-800 text-white dark:text-gray-100 border border-gray-600 dark:border-gray-700">
                 {availableNumbers.map((num: any) => (
-                  <SelectItem key={num.phoneNumber} value={num.phoneNumber} className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-blue-100 dark:hover:bg-blue-900">
+                  <SelectItem key={num.phoneNumber} value={num.phoneNumber} className="bg-gray-800 dark:bg-gray-800 text-white dark:text-gray-100 hover:bg-blue-100 dark:hover:bg-blue-900">
                     {num.friendlyName || num.phoneNumber}
                   </SelectItem>
                 ))}
@@ -481,8 +481,8 @@ const isAllCallsCompleted = () => {
         <div
           className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-all duration-300 cursor-pointer ${
             dragActive 
-              ? 'border-blue-400 bg-blue-50 scale-105' 
-              : 'border-gray-300 hover:border-blue-400 hover:bg-gray-50'
+              ? 'border-blue-400 bg-blue-900/20 scale-105' 
+              : 'border-gray-600 hover:border-blue-400 hover:bg-gray-700'
           }`}
           onDragEnter={handleDrag}
           onDragLeave={handleDrag}
@@ -508,8 +508,8 @@ const isAllCallsCompleted = () => {
           
           {uploadedFile ? (
             <div className="space-y-2">
-              <p className="text-lg font-medium text-gray-700">{uploadedFile.name}</p>
-              <p className="text-sm text-gray-500">{formatFileSize(uploadedFile.size)}</p>
+              <p className="text-lg font-medium text-gray-100">{uploadedFile.name}</p>
+              <p className="text-sm text-gray-300">{formatFileSize(uploadedFile.size)}</p>
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -523,7 +523,7 @@ const isAllCallsCompleted = () => {
             </div>
           ) : (
             <div>
-              <p className="text-lg text-gray-600 mb-2">Drop your Excel or CSV file here or click to browse</p>
+              <p className="text-lg text-gray-200 mb-2">Drop your Excel or CSV file here or click to browse</p>
               <p className="text-sm text-gray-400">Supports .xlsx, .xls, and .csv files</p>
             </div>
           )}
@@ -531,7 +531,7 @@ const isAllCallsCompleted = () => {
 
         {/* Upload Success Message */}
         {uploadSuccess && (
-          <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm animate-in slide-in-from-top duration-300">
+          <div className="mt-4 p-3 bg-green-900/20 border border-green-600 rounded-lg text-green-300 text-sm animate-in slide-in-from-top duration-300">
             {uploadSuccess}
           </div>
         )}
@@ -539,10 +539,10 @@ const isAllCallsCompleted = () => {
 
       {/* Progress Panel */}
       {callStatus && callStatus.total > 0 && (
-        <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 animate-in slide-in-from-bottom duration-500">
+        <div className="bg-gray-800 rounded-xl shadow-lg border border-gray-700 p-6 animate-in slide-in-from-bottom duration-500">
           {/* Show current in-progress call at the top */}
           {currentInProgress && (
-            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-3">
+            <div className="mb-4 p-3 bg-blue-900/20 border border-blue-600 rounded-lg flex items-center gap-3">
               <Clock className="w-5 h-5 text-blue-600 animate-spin" />
               <span className="font-semibold">Currently calling:</span>
               <span className="font-mono text-lg">{currentInProgress.number}</span>
@@ -550,7 +550,7 @@ const isAllCallsCompleted = () => {
           )}
 
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+            <h3 className="text-xl font-bold text-white flex items-center gap-2">
               <Phone className="w-5 h-5 text-green-600" />
               Call Progress
             </h3>
@@ -561,11 +561,11 @@ const isAllCallsCompleted = () => {
 
           {/* Progress Bar */}
           <div className="mb-6">
-            <div className="flex justify-between text-sm text-gray-600 mb-2">
+            <div className="flex justify-between text-sm text-gray-300 mb-2">
               <span>Progress</span>
               <span>{callStatus.currentIndex} / {callStatus.total}</span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+            <div className="w-full bg-gray-700 rounded-full h-3 overflow-hidden">
               <div
                 className="h-full bg-gradient-to-r from-blue-500 to-green-500 transition-all duration-500 ease-out"
                 style={{ width: `${getProgressPercentage()}%` }}
@@ -581,29 +581,29 @@ const isAllCallsCompleted = () => {
 
           {/* Stats Grid */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-gray-50 rounded-lg p-4 text-center">
-              <div className="text-2xl font-bold text-gray-800 transition-all duration-300">
+            <div className="bg-gray-700 rounded-lg p-4 text-center">
+              <div className="text-2xl font-bold text-white transition-all duration-300">
                 {callStatus.total}
               </div>
-              <div className="text-sm text-gray-600">Total</div>
+              <div className="text-sm text-gray-200">Total</div>
             </div>
-            <div className="bg-blue-50 rounded-lg p-4 text-center">
+            <div className="bg-blue-900/20 rounded-lg p-4 text-center">
               <div className="text-2xl font-bold text-blue-600 transition-all duration-300">
                 {getCompletedCount()}
               </div>
-              <div className="text-sm text-gray-600">Completed</div>
+              <div className="text-sm text-gray-200">Completed</div>
             </div>
-            <div className="bg-green-50 rounded-lg p-4 text-center">
+            <div className="bg-green-900/20 rounded-lg p-4 text-center">
               <div className="text-2xl font-bold text-green-600 transition-all duration-300">
                 {getSuccessCount()}
               </div>
-              <div className="text-sm text-gray-600">Success</div>
+              <div className="text-sm text-gray-200">Success</div>
             </div>
-            <div className="bg-red-50 rounded-lg p-4 text-center">
+            <div className="bg-red-900/20 rounded-lg p-4 text-center">
               <div className="text-2xl font-bold text-red-600 transition-all duration-300">
                 {getFailedCount()}
               </div>
-              <div className="text-sm text-gray-600">Failed</div>
+              <div className="text-sm text-gray-200">Failed</div>
             </div>
           </div>
         </div>
@@ -611,8 +611,8 @@ const isAllCallsCompleted = () => {
 
       {/* Controls Panel */}
       {callStatus && callStatus.total > 0 && (
-        <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 animate-in slide-in-from-bottom duration-700">
-          <h3 className="text-xl font-bold text-gray-800 mb-4">Controls</h3>
+        <div className="bg-gray-800 rounded-xl shadow-lg border border-gray-700 p-6 animate-in slide-in-from-bottom duration-700">
+          <h3 className="text-xl font-bold text-white mb-4">Controls</h3>
           <div className="flex flex-wrap gap-3">
             {callStatus.currentIndex === 0 && !callStatus.isPaused && callStatus.isStopped && (
               <button
@@ -664,8 +664,8 @@ const isAllCallsCompleted = () => {
 
       {/* Recent Calls Log */}
       {callStatus && callStatus.results.length > 0 && (
-        <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 animate-in slide-in-from-bottom duration-1000">
-          <h3 className="text-xl font-bold text-gray-800 mb-4">Recent Calls</h3>
+        <div className="bg-gray-800 rounded-xl shadow-lg border border-gray-700 p-6 animate-in slide-in-from-bottom duration-1000">
+          <h3 className="text-xl font-bold text-white mb-4">Recent Calls</h3>
           <div className="max-h-96 overflow-y-auto space-y-2">
             {callStatus.results
               .filter(result => result.status !== 'pending' && result.status !== 'in-progress')
@@ -674,12 +674,12 @@ const isAllCallsCompleted = () => {
               .map((result, index) => (
                 <div
                   key={`${result.number}-${index}`}
-                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border animate-in slide-in-from-left duration-300"
+                  className="flex items-center justify-between p-3 bg-gray-700 rounded-lg border border-gray-600 animate-in slide-in-from-left duration-300"
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
                   <div>
                     <div className="font-mono text-lg">{result.number}</div>
-                    <div className="text-xs text-gray-500">SID: {result.sid || '-'}</div>
+                    <div className="text-xs text-gray-300">SID: {result.sid || '-'}</div>
                     {result.conference && (
                       <div className="text-xs text-blue-600">Conference: {result.conference}</div>
                     )}
@@ -688,16 +688,16 @@ const isAllCallsCompleted = () => {
                     )}
                   </div>
                   <span className={`ml-4 px-2 py-1 rounded text-xs ${
-                    result.status === 'success' ? 'bg-green-100 text-green-700' :
-                    result.status === 'failed' ? 'bg-red-100 text-red-700' :
-                    'bg-gray-100 text-gray-700'
+                    result.status === 'success' ? 'bg-green-900/30 text-green-300' :
+                    result.status === 'failed' ? 'bg-red-900/30 text-red-300' :
+                    'bg-gray-700 text-gray-200'
                   }`}>
                     {result.status}
                   </span>
                 </div>
               ))}
             {callStatus.results.filter(r => r.status !== 'pending' && r.status !== 'in-progress').length === 0 && (
-              <div className="text-center text-gray-500 py-8">
+              <div className="text-center text-gray-300 py-8">
                 No calls made yet
               </div>
             )}

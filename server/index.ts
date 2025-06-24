@@ -14,6 +14,7 @@ import numberRoutes from "./routes/numberRoutes"
 import callLogRoutes from "./routes/callLogRoutes"
 import bulkRoutes from "./routes/bulkCallRoutes"
 import dashboardRoutes from "./routes/dashboardRoutes"
+import messageRoutes from "./routes/messageRoutes"
 
 const app = express()
 
@@ -52,6 +53,7 @@ app.use("/api/numbers", numberRoutes)
 app.use("/api/call-logs", callLogRoutes)
 app.use("/api/bulk-calls", bulkRoutes)
 app.use("/api/dashboard", dashboardRoutes)
+app.use("/api/messages", messageRoutes)
 
 app.get("/", (req, res) => {
   res.status(200).json({ status: "OK", message: "Server is healthy ✅" })

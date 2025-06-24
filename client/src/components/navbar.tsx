@@ -1,6 +1,6 @@
 "use client"
 
-import { Phone, FileText, Settings } from "lucide-react"
+import { Phone, FileText, Settings ,Home,MessageCircle} from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 interface NavbarProps {
@@ -12,8 +12,9 @@ export function Navbar({ activeTab, onTabChange }: NavbarProps) {
   const tabs = [
     { id: "phone", label: "Phone", icon: Phone },
     { id: "logs", label: "Logs", icon: FileText },
-    { id: "settings", label: "Settings", icon: Settings },
+    { id: "settings", label: "Settings", icon: Home },
     { id: "bulk-call", label: "Bulk Call", icon: FileText }, // Assuming you have a BulkCallTab component
+    {id:"message", label: "Message", icon: MessageCircle } // Assuming you have a Message component
   ]
 
   return (

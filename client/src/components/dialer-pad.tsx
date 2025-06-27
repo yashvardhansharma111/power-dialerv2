@@ -34,199 +34,7 @@ const globalDevice: Device | null = null
 const countryTimezones: Record<string, string> = {
   AF: "Asia/Kabul",
   AL: "Europe/Tirane",
-  DZ: "Africa/Algiers",
-  AS: "Pacific/Pago_Pago",
-  AD: "Europe/Andorra",
-  AO: "Africa/Luanda",
-  AG: "America/Antigua",
-  AR: "America/Argentina/Buenos_Aires",
-  AM: "Asia/Yerevan",
-  AU: "Australia/Sydney",
-  AT: "Europe/Vienna",
-  AZ: "Asia/Baku",
-  BS: "America/Nassau",
-  BH: "Asia/Bahrain",
-  BD: "Asia/Dhaka",
-  BB: "America/Barbados",
-  BY: "Europe/Minsk",
-  BE: "Europe/Brussels",
-  BZ: "America/Belize",
-  BJ: "Africa/Porto-Novo",
-  BM: "Atlantic/Bermuda",
-  BT: "Asia/Thimphu",
-  BO: "America/La_Paz",
-  BA: "Europe/Sarajevo",
-  BW: "Africa/Gaborone",
-  BR: "America/Sao_Paulo",
-  BN: "Asia/Brunei",
-  BG: "Europe/Sofia",
-  BF: "Africa/Ouagadougou",
-  BI: "Africa/Bujumbura",
-  KH: "Asia/Phnom_Penh",
-  CM: "Africa/Douala",
-  CA: "America/Toronto",
-  CV: "Atlantic/Cape_Verde",
-  CF: "Africa/Bangui",
-  TD: "Africa/Ndjamena",
-  CL: "America/Santiago",
-  CN: "Asia/Shanghai",
-  CO: "America/Bogota",
-  KM: "Indian/Comoro",
-  CG: "Africa/Brazzaville",
-  CD: "Africa/Kinshasa",
-  CR: "America/Costa_Rica",
-  CI: "Africa/Abidjan",
-  HR: "Europe/Zagreb",
-  CU: "America/Havana",
-  CY: "Asia/Nicosia",
-  CZ: "Europe/Prague",
-  DK: "Europe/Copenhagen",
-  DJ: "Africa/Djibouti",
-  DM: "America/Dominica",
-  DO: "America/Santo_Domingo",
-  EC: "America/Guayaquil",
-  EG: "Africa/Cairo",
-  SV: "America/El_Salvador",
-  GQ: "Africa/Malabo",
-  ER: "Africa/Asmara",
-  EE: "Europe/Tallinn",
-  SZ: "Africa/Mbabane",
-  ET: "Africa/Addis_Ababa",
-  FJ: "Pacific/Fiji",
-  FI: "Europe/Helsinki",
-  FR: "Europe/Paris",
-  GA: "Africa/Libreville",
-  GM: "Africa/Banjul",
-  GE: "Asia/Tbilisi",
-  DE: "Europe/Berlin",
-  GH: "Africa/Accra",
-  GR: "Europe/Athens",
-  GD: "America/Grenada",
-  GT: "America/Guatemala",
-  GN: "Africa/Conakry",
-  GW: "Africa/Bissau",
-  GY: "America/Guyana",
-  HT: "America/Port-au-Prince",
-  HN: "America/Tegucigalpa",
-  HU: "Europe/Budapest",
-  IS: "Atlantic/Reykjavik",
-  IN: "Asia/Kolkata",
-  ID: "Asia/Jakarta",
-  IR: "Asia/Tehran",
-  IQ: "Asia/Baghdad",
-  IE: "Europe/Dublin",
-  IL: "Asia/Jerusalem",
-  IT: "Europe/Rome",
-  JM: "America/Jamaica",
-  JP: "Asia/Tokyo",
-  JO: "Asia/Amman",
-  KZ: "Asia/Almaty",
-  KE: "Africa/Nairobi",
-  KI: "Pacific/Tarawa",
-  KP: "Asia/Pyongyang",
-  KR: "Asia/Seoul",
-  KW: "Asia/Kuwait",
-  KG: "Asia/Bishkek",
-  LA: "Asia/Vientiane",
-  LV: "Europe/Riga",
-  LB: "Asia/Beirut",
-  LS: "Africa/Maseru",
-  LR: "Africa/Monrovia",
-  LY: "Africa/Tripoli",
-  LI: "Europe/Vaduz",
-  LT: "Europe/Vilnius",
-  LU: "Europe/Luxembourg",
-  MG: "Indian/Antananarivo",
-  MW: "Africa/Blantyre",
-  MY: "Asia/Kuala_Lumpur",
-  MV: "Indian/Maldives",
-  ML: "Africa/Bamako",
-  MT: "Europe/Malta",
-  MH: "Pacific/Majuro",
-  MR: "Africa/Nouakchott",
-  MU: "Indian/Mauritius",
-  MX: "America/Mexico_City",
-  FM: "Pacific/Pohnpei",
-  MD: "Europe/Chisinau",
-  MC: "Europe/Monaco",
-  MN: "Asia/Ulaanbaatar",
-  ME: "Europe/Podgorica",
-  MA: "Africa/Casablanca",
-  MZ: "Africa/Maputo",
-  MM: "Asia/Yangon",
-  NA: "Africa/Windhoek",
-  NR: "Pacific/Nauru",
-  NP: "Asia/Kathmandu",
-  NL: "Europe/Amsterdam",
-  NZ: "Pacific/Auckland",
-  NI: "America/Managua",
-  NE: "Africa/Niamey",
-  NG: "Africa/Lagos",
-  NO: "Europe/Oslo",
-  OM: "Asia/Muscat",
-  PK: "Asia/Karachi",
-  PW: "Pacific/Palau",
-  PA: "America/Panama",
-  PG: "Pacific/Port_Moresby",
-  PY: "America/Asuncion",
-  PE: "America/Lima",
-  PH: "Asia/Manila",
-  PL: "Europe/Warsaw",
-  PT: "Europe/Lisbon",
-  QA: "Asia/Qatar",
-  RO: "Europe/Bucharest",
-  RU: "Europe/Moscow",
-  RW: "Africa/Kigali",
-  KN: "America/St_Kitts",
-  LC: "America/St_Lucia",
-  VC: "America/St_Vincent",
-  WS: "Pacific/Apia",
-  SM: "Europe/San_Marino",
-  ST: "Africa/Sao_Tome",
-  SA: "Asia/Riyadh",
-  SN: "Africa/Dakar",
-  RS: "Europe/Belgrade",
-  SC: "Indian/Mahe",
-  SL: "Africa/Freetown",
-  SG: "Asia/Singapore",
-  SK: "Europe/Bratislava",
-  SI: "Europe/Ljubljana",
-  SB: "Pacific/Guadalcanal",
-  SO: "Africa/Mogadishu",
-  ZA: "Africa/Johannesburg",
-  ES: "Europe/Madrid",
-  LK: "Asia/Colombo",
-  SD: "Africa/Khartoum",
-  SR: "America/Paramaribo",
-  SE: "Europe/Stockholm",
-  CH: "Europe/Zurich",
-  SY: "Asia/Damascus",
-  TW: "Asia/Taipei",
-  TJ: "Asia/Dushanbe",
-  TZ: "Africa/Dar_es_Salaam",
-  TH: "Asia/Bangkok",
-  TL: "Asia/Dili",
-  TG: "Africa/Lome",
-  TO: "Pacific/Tongatapu",
-  TT: "America/Port_of_Spain",
-  TN: "Africa/Tunis",
-  TR: "Europe/Istanbul",
-  TM: "Asia/Ashgabat",
-  TV: "Pacific/Funafuti",
-  UG: "Africa/Kampala",
-  UA: "Europe/Kyiv",
-  AE: "Asia/Dubai",
-  GB: "Europe/London",
-  US: "America/New_York",
-  UY: "America/Montevideo",
-  UZ: "Asia/Tashkent",
-  VU: "Pacific/Efate",
-  VA: "Europe/Vatican",
-  VE: "America/Caracas",
-  VN: "Asia/Ho_Chi_Minh",
-  YE: "Asia/Aden",
-  ZM: "Africa/Lusaka",
-  ZW: "Africa/Harare"
+ 
 };
 
 function getCountryAndTime(number: string) {
@@ -316,49 +124,10 @@ export function DialerPad() {
   }, []);
 
   useEffect(() => {
-    // 🧠 Auto-connect when callStatus is 'calling'
-    const joinConference = async () => {
-      console.log("🔁 useEffect triggered with callStatus:", callStatus);
-
-      if (!twilioDevice) {
-        console.warn("⚠️ twilioDevice not initialized yet");
-        return;
-      }
-
-      if (callStatus === "calling") {
-        console.log("📞 Connecting browser to Twilio room: ZifyRoom");
-
-        try {
-          const conn = await twilioDevice.connect({
-            params: { room: "ZifyRoom" },
-          });
-
-          if (conn) {
-            console.log("✅ Device.connect() returned:", conn);
-
-            conn.on("accept", () => {
-              console.log("🎉 Browser joined conference (accept event)");
-            });
-
-            conn.on("disconnect", () => {
-              console.log("📴 Disconnected from room");
-            });
-
-            conn.on("error", (err) => {
-              console.error("❌ Connection error:", err);
-            });
-          } else {
-            console.error("❌ Device.connect() returned null");
-          }
-        } catch (err) {
-          console.error("🔥 Error connecting to conference:", err);
-        }
-      } else {
-        console.log("ℹ️ callStatus is not 'calling', skipping connect");
-      }
-    };
-
-    joinConference();
+    // Direct call flow: no conference join logic required
+    // All call connection logic is handled by backend and Twilio
+    // Remove joinConference and any conference params from connect
+    // No-op or remove this function entirely if not used elsewhere
   }, [callStatus, twilioDevice]);
 
   useEffect(() => {
@@ -416,44 +185,32 @@ export function DialerPad() {
   const handleBackspace = () => setNumber((prev) => prev.slice(0, -1))
 
   const handleCall = async () => {
-    if (!number.trim() || !selectedNumber) {
-      toast({ title: "Missing Info", description: "Enter a number and select your Twilio caller ID.", variant: "destructive" })
-      return
+    if (!twilioDevice || !number.trim()) {
+      toast({ title: "Missing Info", description: "Enter a number to call.", variant: "destructive" })
+      return;
     }
-    setIsLoading(true)
-    setCallStatus("calling")
+    setIsLoading(true);
+    setCallStatus("calling");
     try {
-      const response = await fetch(API.MANUAL_CALL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("jwt")}`,
-        },
-        body: JSON.stringify({ to: number, from: selectedNumber }),
-      })
-      if (!response.ok) throw new Error("Call failed")
-      const data = await response.json()
-      setActiveCallSid(data.sid || "")
-      toast({ title: "Call Initiated", description: `Dialing ${number}...` })
-    } catch {
-      toast({ title: "Call Failed", description: "Something went wrong.", variant: "destructive" })
-      setCallStatus("idle")
+      const conn = await twilioDevice.connect({ params: { To: number } });
+      setActiveCallSid(conn?.parameters?.CallSid || "");
+      toast({ title: "Call Initiated", description: `Dialing ${number}...` });
+    } catch (err) {
+      toast({ title: "Call Failed", description: "Something went wrong.", variant: "destructive" });
+      setCallStatus("idle");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleHangup = async () => {
-    if (!activeCallSid) return
+    if (!twilioDevice) return;
     try {
-      await fetch(API.TERMINATE(activeCallSid), {
-        method: "POST",
-        headers: { Authorization: `Bearer ${localStorage.getItem("jwt")}` },
-      })
-      setCallStatus("completed")
-      toast({ title: "Call Ended" })
+      twilioDevice.disconnectAll();
+      setCallStatus("completed");
+      toast({ title: "Call Ended" });
     } catch {
-      toast({ title: "Error", description: "Could not hang up.", variant: "destructive" })
+      toast({ title: "Error", description: "Could not hang up.", variant: "destructive" });
     }
   }
 

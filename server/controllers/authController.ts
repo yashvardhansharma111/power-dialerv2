@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 
-const EMAIL = "admin@example.com";
-const PASSWORD = "admin123";
+const EMAIL = "Kenneth@lodgezify.com";
+const PASSWORD = "test@123";
 
 export const login = (req: Request, res: Response): void => {
   const { email, password } = req.body;

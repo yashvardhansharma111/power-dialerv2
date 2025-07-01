@@ -20,7 +20,7 @@ const app = express()
 
 // ✅ Proper CORS middleware for Express
 app.use(cors({
-  origin: "https://zifybot.com", // or "*" for testing only
+  origin: "http://localhost:3000", // or "*" for testing only
   methods: ["GET", "POST", "PATCH", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true
@@ -35,8 +35,8 @@ const server = http.createServer(app)
 const io = new Server(server, {
   cors: {
     origin: ["http://localhost:3000",
-      "https://zifybot.com/",
-      "https://zifybot.com"
+      "http://localhost:3000/",      "https://zifybot.com/",
+      "https://zifybot.com/"
     ], // same as frontend
     methods: ["GET", "POST"]
   }

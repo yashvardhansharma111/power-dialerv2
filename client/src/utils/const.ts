@@ -1,4 +1,4 @@
-const API_BASE = "https://api.zifybot.com/api";
+const API_BASE = "http://localhost:8001/api";
 
 export const API = {
   LOGIN: `${API_BASE}/auth/login`,

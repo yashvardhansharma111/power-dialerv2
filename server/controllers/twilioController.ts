@@ -116,6 +116,7 @@ export const connectCall = (req: Request, res: Response): void => {
       || req.body?.customerNumber 
       || req.body?.To 
       || req.body?.to;
+    const callerId = req.query.callerId || req.body?.callerId || process.env.TWILIO_NUMBER;
     console.log(`[connectCall] Request to dial number: ${customerNumber}`);
     if (req.query.customerNumber) console.log('[connectCall] Used req.query.customerNumber');
     else if (req.body?.customerNumber) console.log('[connectCall] Used req.body.customerNumber');

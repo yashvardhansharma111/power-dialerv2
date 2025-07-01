@@ -19,7 +19,11 @@ function logActiveCalls() {
 
 export const makeManualCall = async (req: Request, res: Response): Promise<void> => {
   const { to, from } = req.body;
-  const callerId = from || process.env.DEFAULT_TWILIO_NUMBER;
+  const callerId = from 
+
+  if (!from) {
+    console.log("[makeManualCall] No 'from' number provided");
+  } 
 
   if (!to || !callerId) {
     res.status(400).json({ error: "Missing 'to' or 'from' number" });
@@ -37,7 +41,7 @@ export const makeManualCall = async (req: Request, res: Response): Promise<void>
       from: callerId,
       to,
       record: true,
-      url: `${process.env.BASE_URL}/api/twilio/connect?customerNumber=${encodeURIComponent(to)}`,
+      url: `${process.env.BASE_URL}/api/twilio/connect?customerNumber=${encodeURIComponent(to)}&callerId=${encodeURIComponent(callerId)}`,
       statusCallback: `${process.env.BASE_URL}/api/twilio/events`,
       statusCallbackEvent: ["initiated", "ringing", "answered", "completed", "failed", "busy", "no-answer"],
       statusCallbackMethod: "POST",

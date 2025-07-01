@@ -87,6 +87,21 @@ export const handleIncomingCall = (req: Request, res: Response): void => {
   console.log("📞 [Twilio] Incoming call hit");
   const voiceResponse = new twiml.VoiceResponse();
   voiceResponse.say("Thank you for calling. Please hold.");
+
+  // Emit incoming call event via Socket.IO
+  const io = req.app.get("io");
+  if (io) {
+    io.emit("incoming-call", {
+      from: req.body.From,
+      to: req.body.To,
+      callSid: req.body.CallSid,
+      timestamp: Date.now(),
+    });
+    console.log("✅ Emitted incoming-call via WebSocket");
+  } else {
+    console.warn("⚠️ Socket.IO instance not set in Express app");
+  }
+
   res.type("text/xml").send(voiceResponse.toString());
 };
 

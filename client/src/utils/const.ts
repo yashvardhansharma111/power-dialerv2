@@ -32,4 +32,6 @@ export const API = {
       `${API_BASE}/messages/conversation/${number}?from=${from}`,              // GET
     STATUS_CALLBACK: `${API_BASE}/messages/status-callback`, // POST (used by Twilio internally)
   },
+
+  AGENT_JOIN_CONFERENCE: `${API_BASE}/twilio/agent-join`,
 };

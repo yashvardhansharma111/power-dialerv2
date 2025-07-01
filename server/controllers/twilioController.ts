@@ -89,12 +89,30 @@ export const callStatusWebhook = (req: Request, res: Response): void => {
 
 // POST /api/twilio/incoming
 export const handleIncomingCall = (req: Request, res: Response): void => {
-  console.log("📞 [Twilio] Incoming call hit");
+  const { From, To, CallSid } = req.body;
+  const conferenceName = `conf_${CallSid}`;
+  console.log("📞 [Twilio] Incoming call from", From, "to", To, "CallSid:", CallSid);
+
+  // Notify frontend via WebSocket with conference info
+  const io = req.app.get("io");
+  if (io) {
+    io.emit("incoming-call", { from: From, to: To, callSid: CallSid, conference: conferenceName });
+    console.log("✅ Emitted incoming-call via WebSocket");
+  } else {
+    console.warn("⚠️ Socket.IO instance not set in Express app");
+  }
+
+  // Respond to Twilio: place caller in a conference
   const voiceResponse = new twiml.VoiceResponse();
-  voiceResponse.say("Thank you for calling. Please hold.");
+  voiceResponse.say("Thank you for calling. Please hold while we connect you to an agent.");
+  voiceResponse.dial().conference({
+    startConferenceOnEnter: true,
+    endConferenceOnExit: true,
+    waitUrl: '', // Twilio default hold music
+  }, conferenceName);
+
   res.type("text/xml").send(voiceResponse.toString());
 };
-
 
 // POST /api/twilio/connect
 // Directly dials the provided customer number, no conference logic
@@ -161,6 +179,22 @@ export const joinConference = (req:Request, res:Response) => {
 
   res.type("text/xml");
   res.send(response.toString());
+};
+
+// POST /api/twilio/agent-join
+// Agent joins the specified conference
+export const agentJoinConference = (req: Request, res: Response) => {
+  const { conference, agentNumber } = req.body;
+  if (!conference || !agentNumber) {
+    res.status(400).type("text/xml").send(`<Response><Say>Missing conference or agent number.</Say></Response>`);
+    return;
+  }
+  const response = new twiml.VoiceResponse();
+  response.dial({ callerId: agentNumber }).conference({
+    startConferenceOnEnter: true,
+    endConferenceOnExit: true,
+  }, conference);
+  res.status(200).type("text/xml").send(response.toString());
 };
 
 

@@ -16,6 +16,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { User2 } from 'lucide-react';
+import { useSocket } from "@/hooks/use-socket";
+import { toast } from "@/hooks/use-toast";
 
 interface DashboardStats {
   from: string;
@@ -46,6 +48,7 @@ export default function DashboardView() {
   const [loading, setLoading] = useState(false)
   const [twilioNumbers, setTwilioNumbers] = useState<string[]>([]);
   const [selectedNumber, setSelectedNumber] = useState<string>('');
+  const socket = useSocket();
 
   const fetchTwilioNumbers = async () => {
     try {
@@ -109,6 +112,22 @@ export default function DashboardView() {
       fetchStats();
     }
   }, [dateRange, selectedNumber]);
+
+  useEffect(() => {
+    if (!socket) return;
+    const handleIncomingCall = (data: { from: string; to: string }) => {
+      toast({
+        title: "Incoming Call",
+        description: `From: ${data.from}`,
+        variant: "default",
+        duration: 5000,
+      });
+    };
+    socket.on("incoming-call", handleIncomingCall);
+    return () => {
+      socket.off("incoming-call", handleIncomingCall);
+    };
+  }, [socket]);
 
   const summary = stats?.stats ? Object.values(stats.stats).reduce((acc, s) => {
     acc.total += s.total;

@@ -6,6 +6,7 @@ import {
   getToken,
   handleIncomingCall,
   joinConference,
+  agentJoinConference,
 } from "../controllers/twilioController";
 
 const router = express.Router();
@@ -16,6 +17,7 @@ router.post("/incoming", handleIncomingCall);
 router.post("/connect", connectCall); // ✅ THIS IS FINE
 router.get("/token", getToken);
 router.get("/join-conference",joinConference);
+router.post("/agent-join", agentJoinConference);
 
 
 export default router;

@@ -1,8 +1,6 @@
 import { Request, Response } from "express";
 import { extractNumbersFromExcel } from "../utils/parseExcel";
-import client from "../utils/twilioClient";
 import { Express } from "express";
-
 
 interface MulterRequest extends Request {
   file?: Express.Multer.File;
@@ -16,7 +14,7 @@ interface BulkCallState {
   currentIndex: number;
   isPaused: boolean;
   isStopped: boolean;
-  from?: string; 
+  from?: string;
   results: {
     number: string;
     status: CallStatus;
@@ -27,106 +25,12 @@ interface BulkCallState {
 
 const bulkCallState: BulkCallState = {
   numbers: [],
-  delay: 5000, // default delay (5 seconds)
+  delay: 5000,
   currentIndex: 0,
   isPaused: false,
   isStopped: false,
-  from: undefined, 
+  from: undefined,
   results: [],
-};
-
-// Helper to wait
-const wait = (ms: number) => new Promise((res) => setTimeout(res, ms));
-
-// Map to track active customer calls to prevent duplicates
-const activeCustomerCalls = new Map<string, string>();
-
-// Dial next number only (event-driven)
-export const dialNextNumber = async () => {
-  // (No conference logic remains, only direct dial)
-
-  if (
-    bulkCallState.isStopped ||
-    bulkCallState.isPaused ||
-    bulkCallState.currentIndex >= bulkCallState.numbers.length
-  ) {
-    return;
-  }
-
-  const number = bulkCallState.numbers[bulkCallState.currentIndex];
-  bulkCallState.results[bulkCallState.currentIndex] = { number, status: "in-progress" };
-
-  const callerId = bulkCallState.from || process.env.DEFAULT_TWILIO_NUMBER;
-  if (!callerId) {
-    console.error("[BulkCall] No callerId provided for call.");
-    bulkCallState.results[bulkCallState.currentIndex] = {
-      number,
-      status: "failed",
-      error: "No callerId provided"
-    };
-    bulkCallState.currentIndex++;
-    setTimeout(dialNextNumber, 1000);
-    return;
-  }
-
-  console.log(`[BulkCall] [EventDriven] Attempting to call: ${number}`);
-
-  // Check if call is already active
-  if (activeCustomerCalls.has(number)) {
-    console.log(`[BulkCall] Call to ${number} is already active (sid: ${activeCustomerCalls.get(number)})`);
-    bulkCallState.results[bulkCallState.currentIndex] = {
-      number,
-      status: "failed",
-      error: "Call is already active"
-    };
-    bulkCallState.currentIndex++;
-    setTimeout(dialNextNumber, 1000);
-    return;
-  }
-
-  console.log(`[BulkCall] Twilio payload:`, {
-    from: callerId,
-    to: number,
-    url: `${process.env.BASE_URL}/api/twilio/connect?customerNumber=${encodeURIComponent(number)}`,
-    statusCallback: `${process.env.BASE_URL}/api/twilio/events`,
-    statusCallbackEvent: ["initiated", "ringing", "answered", "completed", "failed", "busy", "no-answer"],
-    statusCallbackMethod: "POST",
-  });
-
-  try {
-    // Use the same pattern as manual call for consistent two-way communication
-    const call = await client.calls.create({
-      from: callerId,
-      to: number,
-      record: true,
-      url: `${process.env.BASE_URL}/api/twilio/connect?customerNumber=${encodeURIComponent(number)}`,
-      statusCallback: `${process.env.BASE_URL}/api/twilio/events`,
-      statusCallbackEvent: ["initiated", "ringing", "answered", "completed", "failed", "busy", "no-answer"],
-      statusCallbackMethod: "POST",
-    });
-
-    console.log(`[BulkCall] Call initiated. SID: ${call.sid} To: ${number}`);
-    bulkCallState.results[bulkCallState.currentIndex] = {
-      number,
-      sid: call.sid,
-      status: "in-progress"
-    };
-
-    // Track active call to prevent duplicates
-    activeCustomerCalls.set(number, call.sid);
-    console.log(`[activeCustomerCalls] LOCK SET for ${number} (sid: ${call.sid})`);
-  } catch (err: any) {
-    console.error(`[BulkCall] Call failed for ${number}:`, err.message);
-    bulkCallState.results[bulkCallState.currentIndex] = {
-      number,
-      status: "failed",
-      error: err.message
-    };
-    bulkCallState.currentIndex++;
-    // Immediately try next if failed
-    setTimeout(dialNextNumber, 1000);
-    return;
-  }
 };
 
 export const uploadNumbersFromExcel = async (req: MulterRequest, res: Response): Promise<void> => {
@@ -144,10 +48,8 @@ export const uploadNumbersFromExcel = async (req: MulterRequest, res: Response):
       return;
     }
 
-    // Add + if missing and convert scientific notation to string
     const normalizedNumbers = numbers.map((num) => {
       let str = String(num).replace(/\s+/g, "");
-      // Convert scientific notation to plain string if needed
       if (/e\+/i.test(str)) {
         str = Number(str).toFixed(0);
       }
@@ -170,23 +72,37 @@ export const uploadNumbersFromExcel = async (req: MulterRequest, res: Response):
   }
 };
 
-// Start event-driven bulk call
 export const startBulkCalls = async (req: Request, res: Response): Promise<void> => {
-  const { from } = req.body;
-  if (!bulkCallState.numbers.length) {
-    res.status(400).json({ message: "No numbers uploaded" });
-    return;
+  try {
+    console.log("[BulkCall] startBulkCalls API called (frontend-controlled)");
+    console.log("[BulkCall] Request body:", req.body);
+    console.log("[BulkCall] Current bulkCallState:", JSON.stringify({
+      numbers: bulkCallState.numbers,
+      currentIndex: bulkCallState.currentIndex,
+      isPaused: bulkCallState.isPaused,
+      isStopped: bulkCallState.isStopped,
+      from: bulkCallState.from
+    }));
+
+    const { from } = req.body;
+    if (!bulkCallState.numbers.length) {
+      console.error("[BulkCall] No numbers uploaded");
+      res.status(400).json({ message: "No numbers uploaded" });
+      return;
+    }
+    if (bulkCallState.currentIndex >= bulkCallState.numbers.length) {
+      console.error("[BulkCall] All calls already completed");
+      res.status(400).json({ message: "All calls already completed" });
+      return;
+    }
+    bulkCallState.isPaused = false;
+    bulkCallState.isStopped = false;
+    bulkCallState.from = from || process.env.DEFAULT_TWILIO_NUMBER;
+    res.json({ message: "Bulk calling initialized" });
+  } catch (err: any) {
+    console.error("[BulkCall] Error in startBulkCalls:", err.message, err.stack);
+    res.status(500).json({ message: "Failed to start bulk calls", error: err.message });
   }
-  if (bulkCallState.currentIndex >= bulkCallState.numbers.length) {
-    res.status(400).json({ message: "All calls already completed" });
-    return;
-  }
-  bulkCallState.isPaused = false;
-  bulkCallState.isStopped = false;
-  bulkCallState.from = from || process.env.DEFAULT_TWILIO_NUMBER;
-  console.log("[BulkCall] startBulkCalls API called (event-driven)");
-  dialNextNumber();
-  res.json({ message: "Bulk calling started" });
 };
 
 export const stopBulkCalls = (_req: Request, res: Response) => {
@@ -210,11 +126,6 @@ export const resumeBulkCalls = async (_req: Request, res: Response): Promise<voi
     return;
   }
   bulkCallState.isPaused = false;
-  // Only dial next if not already in-progress
-  const current = bulkCallState.results[bulkCallState.currentIndex];
-  if (!current || current.status !== "in-progress") {
-    dialNextNumber();
-  }
   res.json({ message: "Bulk calling resumed" });
 };
 
@@ -223,5 +134,4 @@ export const pauseBulkCalls = async (_req: Request, res: Response): Promise<void
   res.json({ message: "Bulk calling paused" });
 };
 
-// Export bulkCallState for event-driven integration
 export { bulkCallState };

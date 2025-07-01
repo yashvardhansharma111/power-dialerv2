@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Upload, Play, Pause, Square, RotateCcw, Phone, CheckCircle, XCircle, Clock, FileSpreadsheet, AlertCircle, X } from 'lucide-react';
-import { API } from '../utils/const'; // Adjust the import based on your file structure
+import { API } from '@/utils/const';
 import {
   Select,
   SelectContent,
@@ -8,6 +8,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Device } from '@twilio/voice-sdk';
+import { toast } from '@/hooks/use-toast';
 
 interface CallResult {
   number: string;
@@ -41,9 +43,15 @@ const BulkCallTab = () => {
   const [isPolling, setIsPolling] = useState(false);
   const [availableNumbers, setAvailableNumbers] = useState<any[]>([]);
   const [selectedNumber, setSelectedNumber] = useState<string>('');
+  const [twilioDevice, setTwilioDevice] = useState<Device | null>(null);
+  const [isCalling, setIsCalling] = useState(false);
+  const [activeCallSid, setActiveCallSid] = useState<string>('');
+  const [currentBulkIndex, setCurrentBulkIndex] = useState<number>(0);
+  const [bulkNumbers, setBulkNumbers] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const statusIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const isBulkActive = !!callStatus && !callStatus.isStopped && !callStatus.isPaused && callStatus.currentIndex < callStatus.total;
 
   // Toast management
   const addToast = (type: 'success' | 'error' | 'info', message: string) => {
@@ -85,15 +93,13 @@ const BulkCallTab = () => {
 
   // Fetch status from API with abort controller
   const fetchStatus = useCallback(async () => {
-    // Cancel previous request if still pending
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
-
     abortControllerRef.current = new AbortController();
-
     try {
       const response = await fetch(API.BULK_CALLS.STATUS, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('jwt')}` },
         signal: abortControllerRef.current.signal
       });
       if (response.ok) {
@@ -102,7 +108,7 @@ const BulkCallTab = () => {
       }
     } catch (error: any) {
       if (error.name !== 'AbortError') {
-        console.error('Failed to fetch status:', error);
+        toast({ title: 'Failed to fetch status', description: error.message, variant: 'destructive' });
       }
     }
   }, []);
@@ -111,10 +117,9 @@ const BulkCallTab = () => {
   useEffect(() => {
     const shouldPoll = callStatus && callStatus.total > 0 && !callStatus.isStopped && 
                       callStatus.currentIndex < callStatus.total;
-
     if (shouldPoll && !isPolling) {
       setIsPolling(true);
-      statusIntervalRef.current = setInterval(fetchStatus, 1000); // 1s interval for more responsive UI
+      statusIntervalRef.current = setInterval(fetchStatus, 1000);
     } else if (!shouldPoll && isPolling) {
       setIsPolling(false);
       if (statusIntervalRef.current) {
@@ -122,14 +127,10 @@ const BulkCallTab = () => {
         statusIntervalRef.current = null;
       }
     }
-
     return () => {
       if (statusIntervalRef.current) {
         clearInterval(statusIntervalRef.current);
         statusIntervalRef.current = null;
-      }
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
       }
     };
   }, [callStatus, isPolling, fetchStatus]);
@@ -186,8 +187,7 @@ const BulkCallTab = () => {
         setUploadSuccess(`✅ Successfully uploaded ${result.total} numbers from ${uploadedFile.name}`);
         addToast('success', `Successfully uploaded ${result.total} numbers`);
         await fetchStatus();
-        // 🟢 Auto-start bulk calls after upload
-        await startCalls();
+        await startCalls(); // Start calling after upload
       } else {
         const error = await response.json();
         addToast('error', `Upload failed: ${error.message}`);
@@ -201,21 +201,44 @@ const BulkCallTab = () => {
 
   // Fetch available Twilio numbers on mount
   useEffect(() => {
-    const fetchNumbers = async () => {
+    const fetchAvailableNumbers = async () => {
       try {
-        const res = await fetch(API.GET_NUMBERS, {
+        const response = await fetch(API.GET_NUMBERS, {
           headers: { Authorization: `Bearer ${localStorage.getItem('jwt')}` },
         });
-        const data = await res.json();
-        setAvailableNumbers(Array.isArray(data) ? data : data.numbers || []);
-        if (data && data.length > 0) setSelectedNumber(data[0].phoneNumber);
+        const data = await response.json();
+        const numbers = Array.isArray(data) ? data : data.numbers || [];
+        setAvailableNumbers(numbers);
+        if (numbers.length > 0) setSelectedNumber(numbers[0].phoneNumber);
       } catch {
-        addToast('error', 'Failed to fetch Twilio numbers');
+        toast({ title: 'Failed to fetch Twilio numbers', description: 'Unable to load Twilio numbers.', variant: 'destructive' });
       }
     };
-    fetchNumbers();
+    fetchAvailableNumbers();
   }, []);
 
+  // Setup Twilio Device (same as DialerPad)
+  const setupTwilio = useCallback(async () => {
+    try {
+      const res = await fetch(API.GET_TWILIO_TOKEN, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('jwt')}` },
+      });
+      const { token } = await res.json();
+      const device = new Device(token);
+      device.on('registered', () => {
+        setTwilioDevice(device);
+        toast({ title: 'Twilio Device registered' });
+      });
+      device.on('error', (err: any) => {
+        toast({ title: 'Twilio Device Error', description: err.message, variant: 'destructive' });
+      });
+      device.register();
+    } catch (err: any) {
+      toast({ title: 'Twilio Device Setup Failed', description: err.message, variant: 'destructive' });
+    }
+  }, []);
+
+  // Initiate the bulk call loop (frontend-driven)
   const startCalls = async () => {
     setIsStarting(true);
     try {
@@ -229,15 +252,53 @@ const BulkCallTab = () => {
       });
       if (response.ok) {
         addToast('success', 'Bulk calling started successfully');
-        await fetchStatus();
+        // Immediately fetch status to get the numbers
+        const statusRes = await fetch(API.BULK_CALLS.STATUS, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('jwt')}` },
+        });
+        const status = await statusRes.json();
+        setBulkNumbers(status.results.map((r: any) => r.number));
+        setCurrentBulkIndex(0);
+        // Start the first call
+        initiateNextCall(status.results.map((r: any) => r.number), 0);
       } else {
         const error = await response.json();
         addToast('error', `Failed to start: ${error.message}`);
       }
-    } catch (error) {
+    } catch (error: any) {
       addToast('error', 'Failed to start calls: Network error');
     } finally {
       setIsStarting(false);
+    }
+  };
+
+  // Initiate the next call in the bulk list
+  const initiateNextCall = async (numbers: string[], index: number) => {
+    if (!twilioDevice || !numbers[index]) return;
+    setIsCalling(true);
+    try {
+      const conn = await twilioDevice.connect({ params: { To: numbers[index], From: selectedNumber } });
+      setActiveCallSid(conn?.parameters?.CallSid || '');
+      toast({ title: 'Call Initiated', description: `Dialing ${numbers[index]}...` });
+      // Listen for disconnect to trigger next call
+      conn.on('disconnect', () => {
+        setIsCalling(false);
+        setCurrentBulkIndex(prev => prev + 1);
+        if (index + 1 < numbers.length) {
+          initiateNextCall(numbers, index + 1);
+        } else {
+          toast({ title: 'Bulk Call Complete', description: 'All calls completed.' });
+          setBulkNumbers([]);
+          setCurrentBulkIndex(0);
+        }
+      });
+    } catch (err: any) {
+      toast({ title: 'Call Failed', description: `Failed to call ${numbers[index]}`, variant: 'destructive' });
+      setIsCalling(false);
+      setCurrentBulkIndex(prev => prev + 1);
+      if (index + 1 < numbers.length) {
+        initiateNextCall(numbers, index + 1);
+      }
     }
   };
 
@@ -255,19 +316,53 @@ const BulkCallTab = () => {
     }
   };
 
+  // Resume bulk call (frontend-driven)
   const resumeCalls = async () => {
     try {
-      const response = await fetch(API.BULK_CALLS.RESUME, { method: 'POST' });
+      const response = await fetch(API.BULK_CALLS.RESUME, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${localStorage.getItem('jwt')}` },
+      });
       if (response.ok) {
         addToast('success', 'Bulk calling resumed');
         await fetchStatus();
+        // Resume the call loop if there are numbers left
+        if (bulkNumbers.length > 0 && currentBulkIndex < bulkNumbers.length) {
+          initiateNextCall(bulkNumbers, currentBulkIndex);
+        }
       } else {
         addToast('error', 'Failed to resume calls');
       }
-    } catch (error) {
+    } catch (error: any) {
       addToast('error', 'Failed to resume calls: Network error');
     }
   };
+
+  // Setup Twilio Device on mount
+  useEffect(() => {
+    setupTwilio();
+  }, [setupTwilio]);
+
+  // Fetch available numbers on mount
+  // Fetch available numbers on mount
+  const fetchAvailableNumbers = async () => {
+    try {
+      const response = await fetch(API.GET_NUMBERS, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('jwt')}` },
+      });
+      const data = await response.json();
+      const numbers = Array.isArray(data) ? data : data.numbers || [];
+      setAvailableNumbers(numbers);
+      if (numbers.length > 0) setSelectedNumber(numbers[0].phoneNumber);
+    } catch {
+      toast({ title: 'Failed to fetch Twilio numbers', description: 'Unable to load Twilio numbers.', variant: 'destructive' });
+    }
+  };
+
+  useEffect(() => {
+    fetchAvailableNumbers();
+  }, []);
+
 
   const stopCalls = async () => {
     try {
@@ -610,7 +705,7 @@ const BulkCallTab = () => {
                     result.status === 'failed' ? 'bg-red-900/30 text-red-300' :
                     'bg-gray-700 text-gray-200'
                   }`}>
-                    {result.status}
+                   {result.status}
                   </span>
                 </div>
               ))}

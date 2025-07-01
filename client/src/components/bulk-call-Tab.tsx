@@ -219,24 +219,34 @@ const BulkCallTab = () => {
 
   // Setup Twilio Device (same as DialerPad)
   const setupTwilio = useCallback(async () => {
-    try {
-      const res = await fetch(API.GET_TWILIO_TOKEN, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('jwt')}` },
-      });
-      const { token } = await res.json();
-      const device = new Device(token);
-      device.on('registered', () => {
-        setTwilioDevice(device);
-        toast({ title: 'Twilio Device registered' });
-      });
-      device.on('error', (err: any) => {
-        toast({ title: 'Twilio Device Error', description: err.message, variant: 'destructive' });
-      });
-      device.register();
-    } catch (err: any) {
-      toast({ title: 'Twilio Device Setup Failed', description: err.message, variant: 'destructive' });
+  try {
+    let identity = localStorage.getItem("twilio_identity");
+    if (!identity) {
+      identity = `bulk-user::${crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 15)}`;
+      localStorage.setItem("twilio_identity", identity);
     }
-  }, []);
+    const res = await fetch(API.GET_TWILIO_TOKEN, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ identity }),
+    });
+    const { token } = await res.json();
+    const device = new Device(token);
+    device.on("registered", () => {
+      setTwilioDevice(device);
+      toast({ title: "Twilio Device registered" });
+    });
+    device.on("error", (err: any) => {
+      toast({ title: "Twilio Device Error", description: err.message, variant: "destructive" });
+    });
+    device.register();
+  } catch (err: any) {
+    toast({ title: "Twilio Device Setup Failed", description: err.message, variant: "destructive" });
+  }
+}, []);
 
   // Initiate the bulk call loop (frontend-driven)
   const startCalls = async () => {

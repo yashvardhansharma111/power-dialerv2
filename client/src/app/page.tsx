@@ -37,6 +37,12 @@ export default function LoginPage() {
       if (response.ok) {
         const data = await response.json()
         localStorage.setItem("jwt", data.token)
+        // Generate a unique Twilio identity per browser (if not already present)
+        let identity = localStorage.getItem("twilio_identity");
+        if (!identity) {
+          identity = `${email}::${crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 15)}`;
+          localStorage.setItem("twilio_identity", identity);
+        }
         toast({
           title: "Login successful",
           description: "Redirecting to dialer...",
@@ -66,7 +72,7 @@ export default function LoginPage() {
 
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">9x Fold Power Dialer</CardTitle>
+          <CardTitle className="text-2xl font-bold">Power Dialer</CardTitle>
           <CardDescription>Sign in to your account</CardDescription>
         </CardHeader>
         <CardContent>

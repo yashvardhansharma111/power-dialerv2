@@ -144,33 +144,33 @@ const accountSid = process.env.TWILIO_ACCOUNT_SID!;
 const authToken = process.env.TWILIO_AUTH_TOKEN!;
 const applicationSid = process.env.TWIML_APP_SID!; // 🟡 IMPORTANT: You must create a TwiML App in Twilio Console
 
-export const getToken = (req: Request, res: Response) => {
-  const capability = new twilio.jwt.ClientCapability({
-    accountSid,
-    authToken,
-  });
+import { jwt as twilioJwt } from "twilio";
+const AccessToken = twilioJwt.AccessToken;
+const VoiceGrant = AccessToken.VoiceGrant;
 
-  // ✅ Required: pass applicationSid for OutgoingClientScope
-  capability.addScope(
-    new twilio.jwt.ClientCapability.OutgoingClientScope({
-      applicationSid, // 👈 Use the SID of your TwiML App
-    })
+export const getToken = (req: Request, res: Response):void => {
+  const { identity } = req.body;
+  if (!identity) {
+     res.status(400).json({ message: "Identity required" });
+     return;
+  }
+
+  const token = new AccessToken(
+    process.env.TWILIO_ACCOUNT_SID!,
+    process.env.TWILIO_API_KEY!,
+    process.env.TWILIO_API_SECRET!,
+    { identity }
   );
 
-  const token = capability.toJwt();
-  res.json({ token });
+  const voiceGrant = new VoiceGrant({
+    outgoingApplicationSid: process.env.TWIML_APP_SID!,
+    incomingAllow: true,
+  });
+
+  token.addGrant(voiceGrant);
+  res.json({ token: token.toJwt() });
 };
 
-export const joinConference = (req:Request, res:Response) => {
-  const response = new twiml.VoiceResponse();
-  const dial = response.dial();
-  dial.conference({
-    startConferenceOnEnter: true,
-    endConferenceOnExit: true,
-  }, "ZifyRoom");
 
-  res.type("text/xml");
-  res.send(response.toString());
-};
 
 

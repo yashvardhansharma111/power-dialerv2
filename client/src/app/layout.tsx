@@ -9,8 +9,11 @@ import { CallManagerProvider } from "@/components/CallManagerProvider";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "9x Fold Power Dialer",
-  description: "Professional power dialer application for 9x Fold",
+  title: "Power Dialer",
+  description: "Power Dialer",
+  icons: {
+    icon: "/icon.png",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

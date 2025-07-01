@@ -5,7 +5,7 @@ import {
   connectCall,
   getToken,
   handleIncomingCall,
-  joinConference,
+
 } from "../controllers/twilioController";
 
 const router = express.Router();
@@ -15,7 +15,6 @@ router.post("/bridge", bridgeCall);  // ✅ THIS IS FINE
 router.post("/incoming", handleIncomingCall);
 router.post("/connect", connectCall); // ✅ THIS IS FINE
 router.get("/token", getToken);
-router.get("/join-conference",joinConference);
-
+router.post("/token", getToken);
 
 export default router;

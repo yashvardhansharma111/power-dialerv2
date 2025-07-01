@@ -57,10 +57,25 @@ export const CallManagerProvider = ({ children }: { children: React.ReactNode })
   useEffect(() => {
     const setupDevice = async () => {
       try {
+        let identity = localStorage.getItem("twilio_identity");
+  
+        if (!identity) {
+          const uuid = crypto.randomUUID(); // or use uuidv4()
+          identity = `user-session::${uuid}`;
+          localStorage.setItem("twilio_identity", identity);
+        }
+  
         const res = await fetch(API.GET_TWILIO_TOKEN, {
-          headers: { Authorization: `Bearer ${localStorage.getItem("jwt")}` },
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ identity }),
         });
+  
         const { token } = await res.json();
+  
         const device = new Device(token);
         device.on("ready", () => console.log("[Twilio] Device ready"));
         device.on("error", (err) => console.error("[Twilio Error]", err));
@@ -78,14 +93,16 @@ export const CallManagerProvider = ({ children }: { children: React.ReactNode })
           setElapsed(0);
           setConnection(null);
         });
+  
         setTwilioDevice(device);
       } catch (err) {
         console.error("[Twilio] Device setup failed", err);
       }
     };
+  
     setupDevice();
   }, []);
-
+  
   // Timer logic
   useEffect(() => {
     if (callActive && callStartTime) {

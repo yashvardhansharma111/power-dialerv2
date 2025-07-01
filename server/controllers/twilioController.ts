@@ -58,10 +58,12 @@ export const callStatusWebhook = (req: Request, res: Response): void => {
     if (idx !== -1) {
       bulkCallState.results[idx].status = CallStatus.toLowerCase() === "completed" ? "success" : "failed";
       bulkCallState.currentIndex = idx + 1;
+
+      // Only proceed to the next number if this event belonged to an active bulk call entry
+      setTimeout(() => {
+        dialNextNumber();
+      }, 1000);
     }
-    setTimeout(() => {
-      dialNextNumber();
-    }, 1000);
   } else if (CallStatus.toLowerCase() === 'in-progress') {
     const idx = bulkCallState.results.findIndex((r: any) => r && r.sid === CallSid);
     if (idx !== -1) {

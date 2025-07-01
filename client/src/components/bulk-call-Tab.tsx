@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Upload, Play, Pause, Square, RotateCcw, Phone, CheckCircle, XCircle, Clock, FileSpreadsheet, AlertCircle, X } from 'lucide-react';
-import { Device } from '@twilio/voice-sdk'; // Ensure you have the Twilio library installed
 import { API } from '../utils/const'; // Adjust the import based on your file structure
 import {
   Select,
@@ -15,7 +14,6 @@ interface CallResult {
   status: 'pending' | 'initiated' | 'ringing' | 'in-progress' | 'success' | 'failed';
   sid?: string;
   error?: string;
-  conference?: string; // 🆕 Add conference property
 }
 
 interface BulkCallStatus {
@@ -56,11 +54,12 @@ const BulkCallTab = () => {
     }, 5000);
   };
 
-
-const isAllCallsCompleted = () => {
+  const isAllCallsCompleted = () => {
     return callStatus && callStatus.currentIndex === callStatus.total && 
            callStatus.total > 0 && !callStatus.isPaused && !callStatus.isStopped;
-  };  const validateFile = (file: File): boolean => {
+  };
+
+  const validateFile = (file: File): boolean => {
     const allowedExtensions = ['.xlsx', '.xls', '.csv'];
     const allowedMimeTypes = [
       'application/vnd.ms-excel',
@@ -334,89 +333,10 @@ const isAllCallsCompleted = () => {
   // Find the current in-progress call
   const currentInProgress = callStatus?.results.find(r => r.status === 'in-progress');
 
-  // Find the most recent call that is in-progress, ringing, or initiated
-  const currentActiveCall = callStatus?.results
-    .slice() // copy array
-    .reverse() // most recent first
-    .find(r => r.status === 'in-progress' || r.status === 'ringing' || r.status === 'initiated');
-
+  // Debug log results on every status update
   useEffect(() => {
-    // Debug: Log the full results and currentActiveCall on every poll
     console.log('[BulkCallTab] callStatus.results:', callStatus?.results);
-    console.log('[BulkCallTab] currentActiveCall:', currentActiveCall);
-  }, [callStatus, currentActiveCall]);
-
-  // Twilio Device ref for auto join/leave
-  const deviceRef = useRef<any>(null);
-  const currentConferenceRef = useRef<string | null>(null);
-  const lastJoinedConferenceRef = useRef<string | null>(null);
-  const lastInProgressSidRef = useRef<string | null>(null); // 🆕 Track last in-progress call SID
-
-  // Auto join/leave conference as currentActiveCall changes
-  useEffect(() => {
-    console.log('[BulkCallTab] useEffect triggered for conference join/leave. currentActiveCall:', currentActiveCall, 'currentIndex:', callStatus?.currentIndex);
-    const join = async (conference: string, sid?: string) => {
-      try {
-        if (lastJoinedConferenceRef.current === conference) {
-          console.log('[Twilio] Already joined conference:', conference, 'SID:', sid);
-          return;
-        }
-        if (deviceRef.current) {
-          console.log('[Twilio] Destroying previous device for new conference:', conference, 'SID:', sid);
-          deviceRef.current.disconnectAll && deviceRef.current.disconnectAll();
-          deviceRef.current.destroy && deviceRef.current.destroy();
-          deviceRef.current = null;
-        }
-        console.log('[Twilio] Joining conference:', conference, 'SID:', sid);
-        const res = await fetch(API.GET_TWILIO_TOKEN, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('jwt')}` },
-        });
-        const { token } = await res.json();
-        const device = new Device(token);
-        device.on('registered', () => {
-          console.log('[Twilio] Device registered, connecting to conference:', conference, 'SID:', sid);
-          const conn = device.connect({ params: { conference } });
-          console.log('[Twilio] device.connect called:', conn);
-          addToast('success', `Auto-joined conference: ${conference}`);
-        });
-        device.on('disconnect', () => {
-          console.log('[Twilio] Device disconnected from conference:', conference, 'SID:', sid);
-          addToast('info', `Left conference: ${conference}`);
-        });
-        device.on('error', (err: any) => {
-          console.error('[Twilio] Device error:', err);
-          addToast('error', `Twilio error: ${err.message}`);
-        });
-        device.register();
-        deviceRef.current = device;
-        currentConferenceRef.current = conference;
-        lastJoinedConferenceRef.current = conference;
-      } catch (err: any) {
-        console.error('[Twilio] Failed to auto-join conference:', err);
-        addToast('error', `Failed to auto-join conference: ${err.message}`);
-      }
-    };
-    const leave = () => {
-      if (deviceRef.current) {
-        console.log('[Twilio] Leaving conference:', currentConferenceRef.current);
-        deviceRef.current.disconnectAll && deviceRef.current.disconnectAll();
-        deviceRef.current.destroy && deviceRef.current.destroy();
-        deviceRef.current = null;
-        currentConferenceRef.current = null;
-      }
-      lastJoinedConferenceRef.current = null;
-    };
-    // Only join if currentActiveCall exists and has a conference
-    if (currentActiveCall && currentActiveCall.conference) {
-      join(currentActiveCall.conference, currentActiveCall.sid);
-    } else {
-      leave();
-    }
-    return () => {
-      leave();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentActiveCall?.conference, currentActiveCall?.status, currentActiveCall?.sid, callStatus?.currentIndex]);
+  }, [callStatus]);
 
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6 animate-in fade-in duration-500 bg-gray-900 min-h-screen">
@@ -680,9 +600,7 @@ const isAllCallsCompleted = () => {
                   <div>
                     <div className="font-mono text-lg">{result.number}</div>
                     <div className="text-xs text-gray-300">SID: {result.sid || '-'}</div>
-                    {result.conference && (
-                      <div className="text-xs text-blue-600">Conference: {result.conference}</div>
-                    )}
+                    
                     {result.error && (
                       <div className="text-xs text-red-600">Error: {result.error}</div>
                     )}

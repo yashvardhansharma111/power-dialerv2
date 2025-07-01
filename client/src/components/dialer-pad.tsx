@@ -55,6 +55,20 @@ function getCountryAndTime(number: string) {
   return { country, countryName, time: localTime, timeZone };
 }
 
+// Add country code list
+const countryCodes = [
+  { code: "+1", name: "United States", flag: "🇺🇸" },
+  { code: "+91", name: "India", flag: "🇮🇳" },
+  { code: "+44", name: "United Kingdom", flag: "🇬🇧" },
+  { code: "+61", name: "Australia", flag: "🇦🇺" },
+  { code: "+81", name: "Japan", flag: "🇯🇵" },
+  { code: "+49", name: "Germany", flag: "🇩🇪" },
+  { code: "+33", name: "France", flag: "🇫🇷" },
+  { code: "+971", name: "UAE", flag: "🇦🇪" },
+  { code: "+86", name: "China", flag: "🇨🇳" },
+  { code: "+7", name: "Russia", flag: "🇷🇺" },
+];
+
 export function DialerPad() {
   const [number, setNumber] = useState("")
   const [selectedNumber, setSelectedNumber] = useState("")
@@ -64,6 +78,7 @@ export function DialerPad() {
   const [callStatus, setCallStatus] = useState<"idle" | "calling" | "ringing" | "answered" | "completed">("idle")
   const [activeCallSid, setActiveCallSid] = useState("")
   const [twilioDevice, setTwilioDevice] = useState<Device | null>(null)
+  const [selectedCountry, setSelectedCountry] = useState(countryCodes[0]);
 
   useEffect(() => {
     // 🔁 Fetch available numbers
@@ -247,6 +262,16 @@ export function DialerPad() {
     }
   }, [number]);
 
+  // Update number when country changes
+  useEffect(() => {
+    if (!number.startsWith(selectedCountry.code)) {
+      // Remove any existing country code
+      let newNumber = number.replace(/^\+\d{1,3}/, "");
+      setNumber(selectedCountry.code + newNumber);
+    }
+    // eslint-disable-next-line
+  }, [selectedCountry]);
+
   return (
     <div className="max-w-sm mx-auto space-y-6 p-4">
       <Card className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 shadow-xl border-0">
@@ -257,15 +282,38 @@ export function DialerPad() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
+          {/* Country Code Dropdown */}
+          <div className="flex gap-2 items-center justify-center">
+            <Select value={selectedCountry.code} onValueChange={code => {
+              const found = countryCodes.find(c => c.code === code);
+              if (found) setSelectedCountry(found);
+            }}>
+              <SelectTrigger className="w-36 h-12 bg-white/80 backdrop-blur-sm border-2 border-slate-200 rounded-xl hover:border-blue-300 transition-colors">
+                <SelectValue>
+                  {selectedCountry.flag} {selectedCountry.name} {selectedCountry.code}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent className="rounded-xl border-2 border-slate-200 max-h-60 overflow-y-auto">
+                {countryCodes.map((c) => (
+                  <SelectItem key={c.code} value={c.code} className="rounded-lg flex gap-2 items-center">
+                    <span>{c.flag}</span>
+                    <span>{c.name}</span>
+                    <span className="ml-auto text-xs text-slate-500">{c.code}</span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           {/* Number Display */}
-          <div className="relative">
+          <div className="relative mt-2">
             <Input
               value={number}
               onChange={(e) => setNumber(e.target.value)}
               placeholder="Enter phone number"
-              className="text-center text-2xl font-mono h-16 bg-white/80 backdrop-blur-sm border-2 border-slate-200 rounded-xl shadow-inner text-slate-700 placeholder:text-slate-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
+              className="text-center text-2xl font-mono h-16 bg-white/80 backdrop-blur-sm border-2 border-slate-200 rounded-xl shadow-inner text-white placeholder:text-slate-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
               type="tel"
               disabled={callStatus !== "idle"}
+              style={{ color: 'white' }}
             />
             {number && (
               <div className="absolute right-3 top-1/2 -translate-y-1/2">

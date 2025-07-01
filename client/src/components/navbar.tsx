@@ -2,6 +2,9 @@
 
 import { Phone, FileText, Settings ,Home,MessageCircle} from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { useRouter } from "next/navigation"
+import { removeAuthToken } from "@/utils/auth"
+import { useSocket } from "@/hooks/use-socket"
 
 interface NavbarProps {
   activeTab: string
@@ -16,6 +19,16 @@ export function Navbar({ activeTab, onTabChange }: NavbarProps) {
     { id: "bulk-call", label: "Bulk Call", icon: FileText }, // Assuming you have a BulkCallTab component
     {id:"message", label: "Message", icon: MessageCircle } // Assuming you have a Message component
   ]
+  const router = useRouter()
+  const socket = useSocket()
+
+  const handleLogout = () => {
+    removeAuthToken()
+    if (socket) {
+      socket.disconnect()
+    }
+    router.push("/")
+  }
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border">
@@ -34,6 +47,13 @@ export function Navbar({ activeTab, onTabChange }: NavbarProps) {
             </Button>
           )
         })}
+        <Button
+          variant="destructive"
+          className="flex flex-col items-center gap-1 h-auto py-2 px-4"
+          onClick={handleLogout}
+        >
+          <span className="text-xs">Logout</span>
+        </Button>
       </div>
     </div>
   )
